@@ -23,7 +23,6 @@ public class LinkRepositoryImpl implements LinkRepository {
 
     @Override
     public void saveLink(Link link) {
-        Optional<Link> savedLink = Optional.ofNullable(linkStorage.put(link.getShortLink(), link));
         JsonFileHandler.saveLinks(linkStorage);
     }
 

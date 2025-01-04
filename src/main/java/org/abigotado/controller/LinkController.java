@@ -25,8 +25,14 @@ public class LinkController {
             System.out.println("3. Выйти");
             System.out.print("Введите номер действия: ");
 
-            int choice = scanner.nextInt();
-            scanner.nextLine();
+            String input = scanner.nextLine().trim();
+
+            if (!input.matches("\\d+")) {
+                System.out.println("Пожалуйста, введите корректное число.");
+                continue;
+            }
+
+            int choice = Integer.parseInt(input);
 
             switch (choice) {
                 case 1 -> createShortLink(scanner);
@@ -45,7 +51,7 @@ public class LinkController {
         System.out.print("У вас уже есть ID? (да/нет): ");
         String response = scanner.nextLine().trim().toLowerCase();
 
-        if (response.equals("да")) {
+        if (response.equalsIgnoreCase("да")) {
             System.out.print("Введите ваш ID: ");
             try {
                 UUID inputId = UUID.fromString(scanner.nextLine().trim());
