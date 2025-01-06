@@ -2,8 +2,14 @@ package org.abigotado.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.abigotado.entity.Link;
+import org.abigotado.exceptions.LinkAlreadyExistsException;
 import org.abigotado.service.LinkService;
 
+import java.awt.*;
+import java.io.IOException;
+import java.net.URI;
+import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.Scanner;
 import java.util.UUID;
 
@@ -85,16 +91,45 @@ public class LinkController {
         String longLink = scanner.nextLine();
         System.out.print("Введите количество доступных переходов: ");
         int clicksLeft = scanner.nextInt();
-        scanner.nextLine(); // Считываем остаток строки
+        scanner.nextLine();
 
-        Link link = linkService.createShortLink(longLink, userId, clicksLeft, java.time.LocalDateTime.now().plusDays(1));
-        System.out.println("Короткая ссылка создана: " + link.getShortLink());
+        try {
+            Link link = linkService.createShortLink(longLink, userId, clicksLeft, LocalDateTime.now().plusDays(1));
+            System.out.println("Короткая ссылка создана: " + link.getShortLink());
+        } catch (LinkAlreadyExistsException e) {
+            System.out.println("Ссылка уже существует для данного пользователя: " + e.getExistingShortLink());
+        }
     }
 
     private void redirectToLink(Scanner scanner) {
         System.out.print("Введите короткий URL: ");
         String shortLink = scanner.nextLine();
 
-        linkService.redirectToLongLink(shortLink);
+        try {
+            Optional<URI> uri = linkService.getLongLinkUri(shortLink);
+
+            if (uri.isPresent()) {
+                if (Desktop.isDesktopSupported()) {
+                    openUrlInBackground(uri.get());
+                    System.out.println("Перенаправление на: " + uri.get());
+                } else {
+                    System.out.println("Открытие ссылок не поддерживается на этой системе.");
+                }
+            }
+        } catch (IllegalStateException e) {
+            System.out.println(e.getMessage());
+        } catch (IllegalArgumentException e) {
+            System.out.println("Некорректный URL: " + e.getMessage());
+        }
+    }
+
+    private void openUrlInBackground(URI uri) {
+        new Thread(() -> {
+            try {
+                Desktop.getDesktop().browse(uri);
+            } catch (IOException e) {
+                System.out.println("Ошибка при открытии ссылки: " + e.getMessage());
+            }
+        }).start();
     }
 }

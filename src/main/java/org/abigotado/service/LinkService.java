@@ -1,29 +1,37 @@
 package org.abigotado.service;
 
 import org.abigotado.entity.Link;
+import org.abigotado.exceptions.LinkAlreadyExistsException;
 import org.abigotado.repository.LinkRepository;
 
-import java.awt.*;
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class LinkService {
 
     private final LinkRepository linkRepository;
 
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+
+
     public LinkService(LinkRepository linkRepository) {
         this.linkRepository = linkRepository;
+        deleteExpiredLinks();
+        scheduleExpiredLinkDeletion();
     }
 
     public Link createShortLink(String longLink, UUID userId, int clicksLeft, LocalDateTime expirationDate) {
-        Optional<Link> existingLink = linkRepository.findByShortLink(longLink);
+        Optional<Link> existingLink = linkRepository.findByLongLinkAndUserId(longLink, userId);
 
-        if (existingLink.isPresent() && existingLink.get().getUserId().equals(userId)) {
-            return existingLink.get();
+
+        if (existingLink.isPresent()) {
+            throw new LinkAlreadyExistsException(existingLink.get().getShortLink());
         }
 
         String shortLink = generateShortLink();
@@ -42,6 +50,7 @@ public class LinkService {
 
     public Optional<String> getLongLink(String shortLink) {
         Optional<Link> optionalLink = linkRepository.findByShortLink(shortLink);
+
         if (optionalLink.isEmpty()) {
             return Optional.empty();
         }
@@ -49,41 +58,33 @@ public class LinkService {
         Link link = optionalLink.get();
 
         if (link.getExpirationDate().isBefore(LocalDateTime.now())) {
-            linkRepository.deleteExpiredLinks();
-            return Optional.empty();
+            throw new IllegalStateException("Срок действия ссылки истёк.");
         }
 
         if (link.getClicksLeft() <= 0) {
-            return Optional.empty();
+            throw new IllegalStateException("Лимит переходов по ссылке исчерпан.");
         }
 
         linkRepository.decrementClicksLeft(link.getId());
-
         return Optional.of(link.getLongLink());
     }
 
-    public void redirectToLongLink(String shortLink) {
+    public Optional<URI> getLongLinkUri(String shortLink) {
         Optional<String> longLink = getLongLink(shortLink);
-        if (longLink.isPresent()) {
-            try {
-                if (Desktop.isDesktopSupported()) {
-                    Desktop desktop = Desktop.getDesktop();
-                    desktop.browse(new URI(longLink.get()));
-                    System.out.println("Перенаправление на: " + longLink.get());
-                } else {
-                    System.out.println("Открытие ссылок не поддерживается на этой системе.");
-                }
-            } catch (IOException | URISyntaxException e) {
-                System.out.println("Ошибка при попытке открыть URL: " + e.getMessage());
-            }
-        } else {
-            System.out.println("Ссылка недоступна (истек срок действия или исчерпан лимит переходов).");
+
+        if (longLink.isEmpty()) {
+            return Optional.empty();
+        }
+
+        try {
+            return Optional.of(new URI(longLink.get()));
+        } catch (URISyntaxException e) {
+            throw new IllegalArgumentException("Некорректный формат URL: " + longLink.get(), e);
         }
     }
 
     public boolean userHasLinks(UUID userId) {
-        return linkRepository.findAll().stream()
-                             .anyMatch(link -> link.getUserId().equals(userId));
+        return linkRepository.findAll().stream().anyMatch(link -> link.getUserId().equals(userId));
     }
 
     public void deleteExpiredLinks() {
@@ -92,5 +93,9 @@ public class LinkService {
 
     private String generateShortLink() {
         return UUID.randomUUID().toString().substring(0, 6);
+    }
+
+    private void scheduleExpiredLinkDeletion() {
+        scheduler.scheduleAtFixedRate(this::deleteExpiredLinks, 0, 1, TimeUnit.DAYS);
     }
 }
