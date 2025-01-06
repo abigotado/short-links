@@ -1,5 +1,6 @@
 package org.abigotado.repository.impl;
 
+import org.abigotado.config.AppConfig;
 import org.abigotado.entity.Link;
 import org.abigotado.repository.LinkRepository;
 import org.abigotado.utils.JsonFileHandler;
@@ -11,9 +12,10 @@ import java.util.UUID;
 
 public class LinkRepositoryImpl implements LinkRepository {
     private final Map<String, Link> linkStorage;
+    private final String filePath = AppConfig.FILE_PATH;
 
     public LinkRepositoryImpl() {
-        this.linkStorage = JsonFileHandler.loadLinks();
+        this.linkStorage = JsonFileHandler.loadLinks(filePath);
     }
 
     @Override
@@ -32,21 +34,21 @@ public class LinkRepositoryImpl implements LinkRepository {
     @Override
     public void saveLink(Link link) {
         linkStorage.put(link.getShortLink(), link);
-        JsonFileHandler.saveLinks(linkStorage);
+        JsonFileHandler.saveLinks(linkStorage, filePath);
     }
 
     @Override
     public void deleteExpiredLinks() {
         linkStorage.entrySet()
                    .removeIf(entry -> entry.getValue().getExpirationDate().isBefore(java.time.LocalDateTime.now()));
-        JsonFileHandler.saveLinks(linkStorage);
+        JsonFileHandler.saveLinks(linkStorage, filePath);
     }
 
     @Override
     public void decrementClicksLeft(UUID linkId) {
         linkStorage.values().stream().filter(link -> link.getId().equals(linkId)).findFirst().ifPresent(link -> {
             link.setClicksLeft(link.getClicksLeft() - 1);
-            JsonFileHandler.saveLinks(linkStorage);
+            JsonFileHandler.saveLinks(linkStorage, filePath);
         });
     }
 

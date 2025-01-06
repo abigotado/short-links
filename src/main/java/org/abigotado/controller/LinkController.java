@@ -1,6 +1,7 @@
 package org.abigotado.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.abigotado.config.Messages;
 import org.abigotado.entity.Link;
 import org.abigotado.exceptions.LinkAlreadyExistsException;
 import org.abigotado.service.LinkService;
@@ -21,19 +22,19 @@ public class LinkController {
     public void start() {
         initializeUser();
         Scanner scanner = new Scanner(System.in);
-        System.out.println("Добро пожаловать в сервис сокращения ссылок!");
+        System.out.println(Messages.WELCOME_MESSAGE);
 
         while (true) {
-            System.out.println("\nВыберите действие:");
-            System.out.println("1. Создать короткую ссылку");
-            System.out.println("2. Ввести короткий URL");
-            System.out.println("3. Выйти");
-            System.out.print("Введите номер действия: ");
+            System.out.println("\n" + Messages.MENU_HEADER);
+            System.out.println(Messages.MENU_OPTION_1);
+            System.out.println(Messages.MENU_OPTION_2);
+            System.out.println(Messages.MENU_OPTION_3);
+            System.out.print(Messages.MENU_PROMPT);
 
             String input = scanner.nextLine().trim();
 
             if (!input.matches("\\d+")) {
-                System.out.println("Пожалуйста, введите корректное число.");
+                System.out.println(Messages.INVALID_INPUT);
                 continue;
             }
 
@@ -43,32 +44,32 @@ public class LinkController {
                 case 1 -> createShortLink(scanner);
                 case 2 -> redirectToLink(scanner);
                 case 3 -> {
-                    System.out.println("Спасибо за использование сервиса!");
+                    System.out.println(Messages.GOODBYE_MESSAGE);
                     return;
                 }
-                default -> System.out.println("Некорректный выбор. Попробуйте снова.");
+                default -> System.out.println(Messages.INVALID_INPUT);
             }
         }
     }
 
     private void initializeUser() {
         Scanner scanner = new Scanner(System.in);
-        System.out.print("У вас уже есть ID? (да/нет): ");
+        System.out.print(Messages.ASK_USER_ID);
         String response = scanner.nextLine().trim().toLowerCase();
 
         if (response.equalsIgnoreCase("да")) {
-            System.out.print("Введите ваш ID: ");
+            System.out.print(Messages.ENTER_USER_ID);
             try {
                 UUID inputId = UUID.fromString(scanner.nextLine().trim());
                 if (userExists(inputId)) {
                     userId = inputId;
-                    System.out.println("Ваш ID успешно найден: " + userId);
+                    System.out.println(Messages.USER_ID_FOUND + userId);
                 } else {
-                    System.out.println("Пользователь с таким ID не найден. Будет сгенерирован новый ID.");
+                    System.out.println(Messages.USER_NOT_FOUND);
                     generateNewUserId();
                 }
             } catch (IllegalArgumentException e) {
-                System.out.println("Неверный формат ID. Будет сгенерирован новый.");
+                System.out.println(Messages.INVALID_ID_FORMAT);
                 generateNewUserId();
             }
         } else {
@@ -82,27 +83,27 @@ public class LinkController {
 
     private void generateNewUserId() {
         userId = UUID.randomUUID();
-        System.out.println("Ваш новый ID: " + userId);
+        System.out.println(Messages.NEW_USER_ID + userId);
     }
 
     private void createShortLink(Scanner scanner) {
-        System.out.print("Введите длинный URL: ");
+        System.out.print(Messages.ENTER_URL);
         String longLink = scanner.nextLine();
 
-        System.out.print("Введите количество доступных переходов (или нажмите Enter для значения по умолчанию): ");
+        System.out.print(Messages.ENTER_CLICKS);
         String clicksInput = scanner.nextLine();
         Integer clicksLeft = clicksInput.isEmpty() ? null : Integer.parseInt(clicksInput);
 
         try {
             Link link = linkService.createShortLink(longLink, userId, clicksLeft, null);
-            System.out.println("Короткая ссылка создана: " + link.getShortLink());
+            System.out.println(Messages.LINK_CREATED + link.getShortLink());
         } catch (LinkAlreadyExistsException e) {
-            System.out.println("Ссылка уже существует для данного пользователя: " + e.getExistingShortLink());
+            System.out.println(e.getMessage());
         }
     }
 
     private void redirectToLink(Scanner scanner) {
-        System.out.print("Введите короткий URL: ");
+        System.out.print(Messages.ENTER_SHORT_URL);
         String shortLink = scanner.nextLine();
 
         try {
@@ -111,15 +112,15 @@ public class LinkController {
             if (uri.isPresent()) {
                 if (Desktop.isDesktopSupported()) {
                     openUrlInBackground(uri.get());
-                    System.out.println("Перенаправление на: " + uri.get());
+                    System.out.println(Messages.LINK_REDIRECT + uri.get());
                 } else {
-                    System.out.println("Открытие ссылок не поддерживается на этой системе.");
+                    System.out.println(Messages.UNSUPPORTED_SYSTEM);
                 }
             }
         } catch (IllegalStateException e) {
             System.out.println(e.getMessage());
         } catch (IllegalArgumentException e) {
-            System.out.println("Некорректный URL: " + e.getMessage());
+            System.out.println(Messages.LINK_UNAVAILABLE);
         }
     }
 
@@ -128,7 +129,7 @@ public class LinkController {
             try {
                 Desktop.getDesktop().browse(uri);
             } catch (IOException e) {
-                System.out.println("Ошибка при открытии ссылки: " + e.getMessage());
+                System.out.println(Messages.LINK_OPEN_ERROR + e.getMessage());
             }
         }).start();
     }

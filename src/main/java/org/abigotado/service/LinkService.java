@@ -1,6 +1,7 @@
 package org.abigotado.service;
 
 import org.abigotado.config.AppConfig;
+import org.abigotado.config.Messages;
 import org.abigotado.entity.Link;
 import org.abigotado.exceptions.LinkAlreadyExistsException;
 import org.abigotado.repository.LinkRepository;
@@ -64,11 +65,11 @@ public class LinkService {
         Link link = optionalLink.get();
 
         if (link.getExpirationDate().isBefore(LocalDateTime.now())) {
-            throw new IllegalStateException("Срок действия ссылки истёк.");
+            throw new IllegalStateException(Messages.LINK_EXPIRED);
         }
 
         if (link.getClicksLeft() <= 0) {
-            throw new IllegalStateException("Лимит переходов по ссылке исчерпан.");
+            throw new IllegalStateException(Messages.LINK_LIMIT_EXCEEDED);
         }
 
         linkRepository.decrementClicksLeft(link.getId());
@@ -85,7 +86,7 @@ public class LinkService {
         try {
             return Optional.of(new URI(longLink.get()));
         } catch (URISyntaxException e) {
-            throw new IllegalArgumentException("Некорректный формат URL: " + longLink.get(), e);
+            throw new IllegalArgumentException(Messages.INVALID_URL_FORMAT + longLink.get(), e);
         }
     }
 

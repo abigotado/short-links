@@ -7,5 +7,7 @@ public class AppConfig {
 
     public static final String SHORT_LINK_PREFIX = "clk.ru/";
 
+    public static final String FILE_PATH = "links.json";
+
     private AppConfig() {}
 }

@@ -3,6 +3,7 @@ package org.abigotado.utils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.abigotado.config.Messages;
 import org.abigotado.entity.Link;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,32 +15,31 @@ import java.util.Map;
 
 public class JsonFileHandler {
     private static final Logger logger = LoggerFactory.getLogger(JsonFileHandler.class);
-    private static final String FILE_PATH = "links.json";
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     static {
         objectMapper.registerModule(new JavaTimeModule());
     }
 
-    public static Map<String, Link> loadLinks() {
-        File file = new File(FILE_PATH);
+    public static Map<String, Link> loadLinks(String filePath) {
+        File file = new File(filePath);
         if (!file.exists()) {
             return new HashMap<>();
         }
 
         try {
-            return objectMapper.readValue(file, new TypeReference<Map<String, Link>>() {});
+            return objectMapper.readValue(file, new TypeReference<>() {});
         } catch (IOException e) {
-            logger.error("Failed to load links from JSON file", e);
+            logger.error(Messages.JSON_LOAD_ERROR, e);
             return new HashMap<>();
         }
     }
 
-    public static void saveLinks(Map<String, Link> links) {
+    public static void saveLinks(Map<String, Link> links, String filePath) {
         try {
-            objectMapper.writerWithDefaultPrettyPrinter().writeValue(new File(FILE_PATH), links);
+            objectMapper.writerWithDefaultPrettyPrinter().writeValue(new File(filePath), links);
         } catch (IOException e) {
-            logger.error("Failed to save links to JSON file", e);
+            logger.error(Messages.JSON_SAVE_ERROR, e);
         }
     }
 }
