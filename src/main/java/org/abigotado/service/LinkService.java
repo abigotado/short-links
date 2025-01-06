@@ -1,5 +1,6 @@
 package org.abigotado.service;
 
+import org.abigotado.config.AppConfig;
 import org.abigotado.entity.Link;
 import org.abigotado.exceptions.LinkAlreadyExistsException;
 import org.abigotado.repository.LinkRepository;
@@ -26,15 +27,20 @@ public class LinkService {
         scheduleExpiredLinkDeletion();
     }
 
-    public Link createShortLink(String longLink, UUID userId, int clicksLeft, LocalDateTime expirationDate) {
+    public Link createShortLink(String longLink, UUID userId, Integer clicksLeft, LocalDateTime expirationDate) {
         Optional<Link> existingLink = linkRepository.findByLongLinkAndUserId(longLink, userId);
-
-
         if (existingLink.isPresent()) {
             throw new LinkAlreadyExistsException(existingLink.get().getShortLink());
         }
 
-        String shortLink = generateShortLink();
+        if (clicksLeft == null) {
+            clicksLeft = AppConfig.DEFAULT_CLICKS;
+        }
+        if (expirationDate == null) {
+            expirationDate = LocalDateTime.now().plusDays(AppConfig.DEFAULT_EXPIRATION_DAYS);
+        }
+
+        String shortLink = AppConfig.SHORT_LINK_PREFIX + generateShortLink();
         Link link = Link.builder()
                         .id(UUID.randomUUID())
                         .longLink(longLink)

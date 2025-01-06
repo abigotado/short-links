@@ -8,7 +8,6 @@ import org.abigotado.service.LinkService;
 import java.awt.*;
 import java.io.IOException;
 import java.net.URI;
-import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.Scanner;
 import java.util.UUID;
@@ -89,12 +88,13 @@ public class LinkController {
     private void createShortLink(Scanner scanner) {
         System.out.print("Введите длинный URL: ");
         String longLink = scanner.nextLine();
-        System.out.print("Введите количество доступных переходов: ");
-        int clicksLeft = scanner.nextInt();
-        scanner.nextLine();
+
+        System.out.print("Введите количество доступных переходов (или нажмите Enter для значения по умолчанию): ");
+        String clicksInput = scanner.nextLine();
+        Integer clicksLeft = clicksInput.isEmpty() ? null : Integer.parseInt(clicksInput);
 
         try {
-            Link link = linkService.createShortLink(longLink, userId, clicksLeft, LocalDateTime.now().plusDays(1));
+            Link link = linkService.createShortLink(longLink, userId, clicksLeft, null);
             System.out.println("Короткая ссылка создана: " + link.getShortLink());
         } catch (LinkAlreadyExistsException e) {
             System.out.println("Ссылка уже существует для данного пользователя: " + e.getExistingShortLink());
