@@ -1,10 +1,10 @@
-package org.abigotado.service;
+package org.abigotado.links.service;
 
 import org.abigotado.config.AppConfig;
 import org.abigotado.config.Messages;
-import org.abigotado.entity.Link;
+import org.abigotado.links.entity.Link;
 import org.abigotado.exceptions.LinkAlreadyExistsException;
-import org.abigotado.repository.LinkRepository;
+import org.abigotado.links.repository.LinkRepository;
 
 import java.net.URI;
 import java.net.URISyntaxException;

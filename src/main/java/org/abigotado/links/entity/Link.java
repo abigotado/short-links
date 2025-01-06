@@ -1,4 +1,4 @@
-package org.abigotado.entity;
+package org.abigotado.links.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.abigotado.config.Messages;
-import org.abigotado.entity.Link;
+import org.abigotado.links.entity.Link;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

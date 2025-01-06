@@ -1,8 +1,8 @@
-package org.abigotado.repository.impl;
+package org.abigotado.links.repository.impl;
 
 import org.abigotado.config.AppConfig;
-import org.abigotado.entity.Link;
-import org.abigotado.repository.LinkRepository;
+import org.abigotado.links.entity.Link;
+import org.abigotado.links.repository.LinkRepository;
 import org.abigotado.utils.JsonFileHandler;
 
 import java.util.Collection;

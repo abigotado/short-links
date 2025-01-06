@@ -1,10 +1,11 @@
-package org.abigotado.controller;
+package org.abigotado.links.presentation.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.abigotado.config.Messages;
-import org.abigotado.entity.Link;
+import org.abigotado.links.entity.Link;
 import org.abigotado.exceptions.LinkAlreadyExistsException;
-import org.abigotado.service.LinkService;
+import org.abigotado.links.presentation.MenuOptions;
+import org.abigotado.links.service.LinkService;
 
 import java.awt.*;
 import java.io.IOException;
@@ -14,7 +15,7 @@ import java.util.Scanner;
 import java.util.UUID;
 
 @RequiredArgsConstructor
-public class LinkController {
+public class LinkCliController {
 
     private final LinkService linkService;
     private UUID userId;
@@ -25,10 +26,7 @@ public class LinkController {
         System.out.println(Messages.WELCOME_MESSAGE);
 
         while (true) {
-            System.out.println("\n" + Messages.MENU_HEADER);
-            System.out.println(Messages.MENU_OPTION_1);
-            System.out.println(Messages.MENU_OPTION_2);
-            System.out.println(Messages.MENU_OPTION_3);
+            showMenu();
             System.out.print(Messages.MENU_PROMPT);
 
             String input = scanner.nextLine().trim();
@@ -38,17 +36,30 @@ public class LinkController {
                 continue;
             }
 
-            int choice = Integer.parseInt(input);
+            int choice = Integer.parseInt(input) - 1;
+            MenuOptions selectedOption = MenuOptions.fromIndex(choice);
 
-            switch (choice) {
-                case 1 -> createShortLink(scanner);
-                case 2 -> redirectToLink(scanner);
-                case 3 -> {
+            if (selectedOption == null) {
+                System.out.println(Messages.INVALID_INPUT);
+                continue;
+            }
+
+            switch (selectedOption) {
+                case CREATE_SHORT_LINK -> createShortLink(scanner);
+                case ENTER_SHORT_URL -> redirectToLink(scanner);
+                case EXIT -> {
                     System.out.println(Messages.GOODBYE_MESSAGE);
                     return;
                 }
-                default -> System.out.println(Messages.INVALID_INPUT);
             }
+        }
+    }
+
+    private void showMenu() {
+        System.out.println("\n" + Messages.MENU_HEADER);
+        MenuOptions[] options = MenuOptions.values();
+        for (int i = 0; i < options.length; i++) {
+            System.out.println((i + 1) + ". " + options[i].getDescription());
         }
     }
 
