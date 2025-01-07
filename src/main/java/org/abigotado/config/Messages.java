@@ -15,6 +15,7 @@ public class Messages {
     public static final String MENU_HEADER = "Выберите действие:";
     public static final String CREATE_SHORT_URL_OPTION = "Создать короткую ссылку";
     public static final String ENTER_SHORT_URL_OPTION = "Ввести короткий URL";
+    public static final String CHANGE_USER_OPTION = "Сменить пользователя";
     public static final String EXIT_OPTION = "Выйти";
     public static final String MENU_PROMPT = "Введите номер действия: ";
     public static final String JSON_LOAD_ERROR = "Не удалось загрузить ссылки из файла JSON.";

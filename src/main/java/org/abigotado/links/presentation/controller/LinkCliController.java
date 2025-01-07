@@ -2,17 +2,15 @@ package org.abigotado.links.presentation.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.abigotado.config.Messages;
-import org.abigotado.links.entity.Link;
 import org.abigotado.exceptions.LinkAlreadyExistsException;
+import org.abigotado.links.entity.Link;
 import org.abigotado.links.presentation.MenuOptions;
 import org.abigotado.links.service.LinkService;
 
 import java.awt.*;
 import java.io.IOException;
 import java.net.URI;
-import java.util.Optional;
-import java.util.Scanner;
-import java.util.UUID;
+import java.util.*;
 
 @RequiredArgsConstructor
 public class LinkCliController {
@@ -21,28 +19,12 @@ public class LinkCliController {
     private UUID userId;
 
     public void start() {
-        initializeUser();
         Scanner scanner = new Scanner(System.in);
         System.out.println(Messages.WELCOME_MESSAGE);
 
         while (true) {
             showMenu();
-            System.out.print(Messages.RETURN_TO_MENU_MESSAGE);
-            System.out.print(Messages.MENU_PROMPT);
-
-            String input = scanner.nextLine().trim();
-
-            if (checkForReturnToMenu(input)) {
-              continue;
-            }
-
-            if (!input.matches("\\d+")) {
-                System.out.println(Messages.INVALID_INPUT);
-                continue;
-            }
-
-            int choice = Integer.parseInt(input) - 1;
-            MenuOptions selectedOption = MenuOptions.fromIndex(choice);
+            MenuOptions selectedOption = getMenuSelection(scanner);
 
             if (selectedOption == null) {
                 System.out.println(Messages.INVALID_INPUT);
@@ -52,20 +34,48 @@ public class LinkCliController {
             switch (selectedOption) {
                 case CREATE_SHORT_LINK -> createShortLink(scanner);
                 case ENTER_SHORT_URL -> redirectToLink(scanner);
+                case CHANGE_USER -> changeUser();
                 case EXIT -> {
                     System.out.println(Messages.GOODBYE_MESSAGE);
-                    return;
+                    System.exit(0);
                 }
             }
         }
     }
 
+    private Map<Integer, MenuOptions> getAvailableMenuOptions() {
+        Map<Integer, MenuOptions> menuMap = new LinkedHashMap<>();
+        MenuOptions[] options = MenuOptions.values();
+        int displayNumber = 1;
+
+        for (MenuOptions option : options) {
+            if (option == MenuOptions.CHANGE_USER && userId == null) {
+                continue;
+            }
+            menuMap.put(displayNumber, option);
+            displayNumber++;
+        }
+
+        return menuMap;
+    }
+
     private void showMenu() {
         System.out.println("\n" + Messages.MENU_HEADER);
-        MenuOptions[] options = MenuOptions.values();
-        for (int i = 0; i < options.length; i++) {
-            System.out.println((i + 1) + ". " + options[i].getDescription());
-        }
+        getAvailableMenuOptions().forEach((number, option) -> System.out.println(number
+                                                                                 + ". "
+                                                                                 + option.getDescription()));
+    }
+
+    private MenuOptions getMenuSelection(Scanner scanner) {
+        System.out.println(Messages.RETURN_TO_MENU_MESSAGE);
+        System.out.print(Messages.MENU_PROMPT);
+
+        String input = scanner.nextLine().trim();
+
+        if (!input.matches("\\d+")) return null;
+
+        int displayChoice = Integer.parseInt(input);
+        return getAvailableMenuOptions().get(displayChoice);
     }
 
     private void initializeUser() {
@@ -93,6 +103,17 @@ public class LinkCliController {
         }
     }
 
+    private void ensureUserId() {
+        if (userId == null) {
+            initializeUser();
+        }
+    }
+
+    private void changeUser() {
+        userId = null;
+        initializeUser();
+    }
+
     private boolean userExists(UUID inputId) {
         return linkService.userHasLinks(inputId);
     }
@@ -103,16 +124,17 @@ public class LinkCliController {
     }
 
     private void createShortLink(Scanner scanner) {
-        System.out.print(Messages.ENTER_URL);
-        String longLink = scanner.nextLine();
+        String longLink = getInputWithReturnCheck(scanner, Messages.ENTER_URL);
 
-        if (checkForReturnToMenu(longLink)) {
-            return;
-        }
+        if (longLink == null) return;
 
-        System.out.print(Messages.ENTER_CLICKS);
-        String clicksInput = scanner.nextLine();
+        String clicksInput = getInputWithReturnCheck(scanner, Messages.ENTER_CLICKS);
+
+        if (clicksInput == null) return;
+
         Integer clicksLeft = clicksInput.isEmpty() ? null : Integer.parseInt(clicksInput);
+
+        ensureUserId();
 
         try {
             Link link = linkService.createShortLink(longLink, userId, clicksLeft, null);
@@ -123,12 +145,11 @@ public class LinkCliController {
     }
 
     private void redirectToLink(Scanner scanner) {
-        System.out.print(Messages.ENTER_SHORT_URL);
-        String shortLink = scanner.nextLine();
+        String shortLink = getInputWithReturnCheck(scanner, Messages.ENTER_SHORT_URL);
 
-        if (checkForReturnToMenu(shortLink)) {
-            return;
-        }
+        if (shortLink == null) return;
+
+        ensureUserId();
 
         try {
             Optional<URI> uri = linkService.getLongLinkUri(shortLink);
@@ -149,14 +170,21 @@ public class LinkCliController {
     }
 
     private void openUrlInBackground(URI uri) {
-            try {
-                Desktop.getDesktop().browse(uri);
-            } catch (IOException e) {
-                System.out.println(Messages.LINK_OPEN_ERROR + e.getMessage());
-            }
+        try {
+            Desktop.getDesktop().browse(uri);
+        } catch (IOException e) {
+            System.out.println(Messages.LINK_OPEN_ERROR + e.getMessage());
+        }
     }
 
-    private boolean checkForReturnToMenu(String input) {
-        return input.equals(Messages.RETURN_TO_MENU_COMMAND);
+    private String getInputWithReturnCheck(Scanner scanner, String prompt) {
+        System.out.print(prompt);
+        String input = scanner.nextLine().trim();
+
+        if (input.equals(Messages.RETURN_TO_MENU_COMMAND)) {
+            return null;
+        }
+
+        return input;
     }
 }
