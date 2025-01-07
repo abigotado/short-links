@@ -51,9 +51,9 @@
 
 2.	Перейдите в директорию проекта:
 
-    ```bash
-    cd short-links
-    ```
+   ```bash
+   cd short-links
+   ```
 
 3.	Убедитесь, что у вас установлена Java 17 или выше.
 4.	Соберите проект:
@@ -140,8 +140,8 @@
     │   └── service                                # Бизнес-логика модуля
     │       └── LinkService.java
     └── utils                                      # Утилитарные классы
-        ├── JsonFileHandler.java  # Работа с JSON-файлами
-        └── ShortLinkGenerator.java  # Генерация коротких ссылок 
+        ├── JsonFileHandler.java                   # Работа с JSON-файлами
+        └── ShortLinkGenerator.java                # Генерация коротких ссылок 
 
 ## Лицензия
 
