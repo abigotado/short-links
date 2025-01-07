@@ -19,6 +19,8 @@ public class Messages {
     public static final String MENU_PROMPT = "Введите номер действия: ";
     public static final String JSON_LOAD_ERROR = "Не удалось загрузить ссылки из файла JSON.";
     public static final String JSON_SAVE_ERROR = "Не удалось сохранить ссылки в файл JSON.";
+    public static final String RETURN_TO_MENU_COMMAND = "0";
+    public static final String RETURN_TO_MENU_MESSAGE = "В любом месте приложения введите '" + RETURN_TO_MENU_COMMAND + "' для возврата в главное меню.";
 
     // Пользовательские сообщения
     public static final String ENTER_URL = "Введите длинный URL: ";

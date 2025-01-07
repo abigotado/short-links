@@ -27,9 +27,14 @@ public class LinkCliController {
 
         while (true) {
             showMenu();
+            System.out.print(Messages.RETURN_TO_MENU_MESSAGE);
             System.out.print(Messages.MENU_PROMPT);
 
             String input = scanner.nextLine().trim();
+
+            if (checkForReturnToMenu(input)) {
+              continue;
+            }
 
             if (!input.matches("\\d+")) {
                 System.out.println(Messages.INVALID_INPUT);
@@ -101,6 +106,10 @@ public class LinkCliController {
         System.out.print(Messages.ENTER_URL);
         String longLink = scanner.nextLine();
 
+        if (checkForReturnToMenu(longLink)) {
+            return;
+        }
+
         System.out.print(Messages.ENTER_CLICKS);
         String clicksInput = scanner.nextLine();
         Integer clicksLeft = clicksInput.isEmpty() ? null : Integer.parseInt(clicksInput);
@@ -116,6 +125,10 @@ public class LinkCliController {
     private void redirectToLink(Scanner scanner) {
         System.out.print(Messages.ENTER_SHORT_URL);
         String shortLink = scanner.nextLine();
+
+        if (checkForReturnToMenu(shortLink)) {
+            return;
+        }
 
         try {
             Optional<URI> uri = linkService.getLongLinkUri(shortLink);
@@ -141,5 +154,9 @@ public class LinkCliController {
             } catch (IOException e) {
                 System.out.println(Messages.LINK_OPEN_ERROR + e.getMessage());
             }
+    }
+
+    private boolean checkForReturnToMenu(String input) {
+        return input.equals(Messages.RETURN_TO_MENU_COMMAND);
     }
 }
