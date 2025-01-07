@@ -36,6 +36,7 @@ public class Messages {
     public static final String LINK_EXPIRED = "Срок действия ссылки истёк.";
     public static final String LINK_LIMIT_EXCEEDED = "Лимит переходов по ссылке исчерпан.";
     public static final String INVALID_URL_FORMAT = "Некорректный формат URL: ";
+    public static final String INVALID_HASH_FORMAT = "Ошибка генерации хеша: SHA-256 не поддерживается";
 
     // Инициализация пользователя
     public static final String ASK_USER_ID = "У вас уже есть ID? (да/нет): ";
