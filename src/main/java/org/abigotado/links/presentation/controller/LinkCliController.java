@@ -136,12 +136,10 @@ public class LinkCliController {
     }
 
     private void openUrlInBackground(URI uri) {
-        new Thread(() -> {
             try {
                 Desktop.getDesktop().browse(uri);
             } catch (IOException e) {
                 System.out.println(Messages.LINK_OPEN_ERROR + e.getMessage());
             }
-        }).start();
     }
 }
