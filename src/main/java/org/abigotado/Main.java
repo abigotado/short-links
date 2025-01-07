@@ -12,6 +12,5 @@ public class Main {
         LinkCliController linkController = new LinkCliController(linkService);
 
         linkController.start();
-
     }
 }
