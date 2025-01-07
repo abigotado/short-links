@@ -21,11 +21,14 @@ public class Messages {
     public static final String JSON_LOAD_ERROR = "Не удалось загрузить ссылки из файла JSON.";
     public static final String JSON_SAVE_ERROR = "Не удалось сохранить ссылки в файл JSON.";
     public static final String RETURN_TO_MENU_COMMAND = "0";
-    public static final String RETURN_TO_MENU_MESSAGE = "В любом месте приложения введите '" + RETURN_TO_MENU_COMMAND + "' для возврата в главное меню.";
+    public static final String RETURN_TO_MENU_MESSAGE = "В любом месте приложения введите '"
+                                                        + RETURN_TO_MENU_COMMAND
+                                                        + "' для возврата в главное меню.";
 
     // Пользовательские сообщения
     public static final String ENTER_URL = "Введите длинный URL: ";
-    public static final String ENTER_CLICKS = "Введите количество доступных переходов (или нажмите Enter для значения по умолчанию): ";
+    public static final String ENTER_CLICKS = "Введите количество доступных переходов (или нажмите Enter для значения"
+                                              + "  по умолчанию): ";
     public static final String LINK_ALREADY_EXISTS = "Ссылка уже существует для данного пользователя: ";
     public static final String LINK_CREATED = "Короткая ссылка создана: ";
     public static final String ENTER_SHORT_URL = "Введите короткий URL: ";
@@ -39,7 +42,11 @@ public class Messages {
     public static final String INVALID_HASH_FORMAT = "Ошибка генерации хеша: SHA-256 не поддерживается";
 
     // Инициализация пользователя
-    public static final String ASK_USER_ID = "У вас уже есть ID? (да/нет): ";
+    public static final String YES_PROMPT = "да";
+    public static final String ASK_USER_ID = "У вас уже есть ID? (Введите '" + YES_PROMPT + "' или любой символ, чтобы "
+                                             + "создать "
+                                             + "новый "
+                                             + "ID): ";
     public static final String ENTER_USER_ID = "Введите ваш ID: ";
 
     private Messages() {}

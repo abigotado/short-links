@@ -145,11 +145,11 @@ public class LinkCliController {
     }
 
     private void redirectToLink(Scanner scanner) {
+        ensureUserId();
+
         String shortLink = getInputWithReturnCheck(scanner, Messages.ENTER_SHORT_URL);
 
         if (shortLink == null) return;
-
-        ensureUserId();
 
         try {
             Optional<URI> uri = linkService.getLongLinkUri(shortLink);
