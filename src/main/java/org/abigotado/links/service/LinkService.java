@@ -5,6 +5,7 @@ import org.abigotado.config.Messages;
 import org.abigotado.links.entity.Link;
 import org.abigotado.exceptions.LinkAlreadyExistsException;
 import org.abigotado.links.repository.LinkRepository;
+import org.abigotado.utils.ShortLinkGenerator;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -18,9 +19,7 @@ import java.util.concurrent.TimeUnit;
 public class LinkService {
 
     private final LinkRepository linkRepository;
-
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-
 
     public LinkService(LinkRepository linkRepository) {
         this.linkRepository = linkRepository;
@@ -34,21 +33,17 @@ public class LinkService {
             throw new LinkAlreadyExistsException(existingLink.get().getShortLink());
         }
 
-        if (clicksLeft == null) {
-            clicksLeft = AppConfig.DEFAULT_CLICKS;
-        }
-        if (expirationDate == null) {
-            expirationDate = LocalDateTime.now().plusDays(AppConfig.DEFAULT_EXPIRATION_DAYS);
-        }
+        int finalClicksLeft = getDefaultClicks(clicksLeft);
+        LocalDateTime finalExpirationDate = getDefaultExpirationDate(expirationDate);
 
-        String shortLink = AppConfig.SHORT_LINK_PREFIX + generateShortLink();
+        String shortLink = AppConfig.SHORT_LINK_PREFIX + generateShortLink(longLink, userId);
         Link link = Link.builder()
                         .id(UUID.randomUUID())
                         .longLink(longLink)
                         .shortLink(shortLink)
                         .userId(userId)
-                        .clicksLeft(clicksLeft)
-                        .expirationDate(expirationDate)
+                        .clicksLeft(finalClicksLeft)
+                        .expirationDate(finalExpirationDate)
                         .build();
 
         linkRepository.saveLink(link);
@@ -57,20 +52,12 @@ public class LinkService {
 
     public Optional<String> getLongLink(String shortLink) {
         Optional<Link> optionalLink = linkRepository.findByShortLink(shortLink);
-
         if (optionalLink.isEmpty()) {
             return Optional.empty();
         }
 
         Link link = optionalLink.get();
-
-        if (link.getExpirationDate().isBefore(LocalDateTime.now())) {
-            throw new IllegalStateException(Messages.LINK_EXPIRED);
-        }
-
-        if (link.getClicksLeft() <= 0) {
-            throw new IllegalStateException(Messages.LINK_LIMIT_EXCEEDED);
-        }
+        validateLink(link);
 
         linkRepository.decrementClicksLeft(link.getId());
         return Optional.of(link.getLongLink());
@@ -98,11 +85,34 @@ public class LinkService {
         linkRepository.deleteExpiredLinks();
     }
 
-    private String generateShortLink() {
-        return UUID.randomUUID().toString().substring(0, 6);
+    private String generateShortLink(String longLink, UUID userId) {
+        return ShortLinkGenerator.generateShortLink(longLink, userId);
     }
 
     private void scheduleExpiredLinkDeletion() {
-        scheduler.scheduleAtFixedRate(this::deleteExpiredLinks, 0, 1, TimeUnit.DAYS);
+        scheduler.scheduleAtFixedRate(
+                this::deleteExpiredLinks,
+                0,
+                AppConfig.DEFAULT_LINK_CLEANUP_INTERVAL_HOURS,
+                TimeUnit.HOURS
+        );
+    }
+
+    private int getDefaultClicks(Integer clicksLeft) {
+        return clicksLeft != null ? clicksLeft : AppConfig.DEFAULT_CLICKS;
+    }
+
+    private LocalDateTime getDefaultExpirationDate(LocalDateTime expirationDate) {
+        return expirationDate != null ? expirationDate : LocalDateTime.now().plusDays(AppConfig.DEFAULT_EXPIRATION_DAYS);
+    }
+
+    private void validateLink(Link link) {
+        if (link.getExpirationDate().isBefore(LocalDateTime.now())) {
+            throw new IllegalStateException(Messages.LINK_EXPIRED);
+        }
+
+        if (link.getClicksLeft() <= 0) {
+            throw new IllegalStateException(Messages.LINK_LIMIT_EXCEEDED);
+        }
     }
 }
